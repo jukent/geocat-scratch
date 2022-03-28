@@ -1,4 +1,4 @@
-name: uxarray-testing
+name: geocat-testing
 channels:
   - conda-forge
 dependencies:
