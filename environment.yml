@@ -1,0 +1,14 @@
+name: uxarray-testing
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - matplotlib
+  - jupyterlab>=3
+  - xarray
+  - ipywidgets
+  - dask
+  - netcdf4
+  - pip
+  - pip:
+    - git+https://github.com/UXARRAY/uxarray@main
