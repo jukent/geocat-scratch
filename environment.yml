@@ -1,10 +1,12 @@
 name: geocat-testing
 channels:
   - conda-forge
+  - ncar
 dependencies:
   - python
   - matplotlib
   - jupyterlab>=3
+  - geocat-comp
   - xarray
   - ipywidgets
   - dask
