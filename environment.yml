@@ -12,6 +12,8 @@ dependencies:
   - dask
   - netcdf4
   - line_profiler
+  - intake-esm
+  - ncar-jobqueue
   - pip
   - pip:
     - git+https://github.com/UXARRAY/uxarray@main
