@@ -16,4 +16,5 @@ dependencies:
   - ncar-jobqueue
   - pip
   - pip:
-    - git+https://github.com/UXARRAY/uxarray@main
+    - git+https://github.com/UXARRAY/uxarray@integration
+    
