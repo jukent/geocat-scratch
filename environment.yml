@@ -12,6 +12,7 @@ dependencies:
   - dask
   - netcdf4
   - line_profiler
+  - memory_profiler
   - pip
   - pip:
     - git+https://github.com/UXARRAY/uxarray@main
