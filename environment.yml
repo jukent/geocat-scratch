@@ -1,6 +1,7 @@
-name: geocat-testing
+name: uxarray-release-testing
 channels:
   - conda-forge
+  - anissa111
   - ncar
 dependencies:
   - python
@@ -15,7 +16,5 @@ dependencies:
   - intake-esm
   - ncar-jobqueue
   - memory_profiler
-  - pip
-  - pip:
-    - git+https://github.com/UXARRAY/uxarray@integration
+  - uxarray
     
