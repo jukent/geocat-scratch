@@ -1,7 +1,7 @@
 name: uxarray-release-testing
 channels:
-  - conda-forge
   - anissa111
+  - conda-forge
   - ncar
 dependencies:
   - python
