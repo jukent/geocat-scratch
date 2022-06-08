@@ -1,0 +1,21 @@
+name: uxarray-pip
+channels:
+  - conda-forge
+  - ncar
+dependencies:
+  - python
+  - matplotlib
+  - jupyterlab>=3
+  - geocat-comp
+  - xarray
+  - ipywidgets
+  - dask
+  - netcdf4
+  - line_profiler
+  - intake-esm
+  - ncar-jobqueue
+  - memory_profiler
+  - pip
+  - pip:
+    - git+https://github.com/UXARRAY/uxarray@main
+    
