@@ -1,0 +1,23 @@
+name: pycharm
+channels: 
+  - conda-forge
+dependencies:
+  - python=3.10
+  - dask
+  - jupyterlab
+  - jupyter_http_over_ws
+  - matplotlib
+  - metpy
+  - nodejs
+  - pre-commit
+  - pytest
+  - scipy
+  - xarray
+  - cf_xarray
+  - cftime
+  - eofs
+  - conda-build
+  - conda-smithy
+  - anaconda-client
+  - siphon
+  - cartopy
