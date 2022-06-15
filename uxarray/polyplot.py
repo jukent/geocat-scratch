@@ -89,11 +89,5 @@ class poly_plot():
         return df
     
     def plot_data(self):
-        hv.extension("bokeh")
-        hv.output(dpi=300)
-        cmap = cmap=cmocean.cm.curl
-
-        projection = ccrs.PlateCarree(central_longitude=0)
-
-        hvpolys = hv.Polygons(self.df, vdims=['faces']).opts(color='faces', tools=['hover'])
-        rasterize(hvpolys, aggregator=ds.mean('faces')).opts(width=2000, height=1000, tools=['hover'], cmap=cmap, colorbar=True) * gf.coastline(projection=projection)
+        '''not implemented'''
+        return 
