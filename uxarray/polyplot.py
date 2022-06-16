@@ -2,6 +2,7 @@ import numpy as np
 import xarray as xr
 import pandas as pd
 import dask as da
+from dask import delayed, compute
 import scipy.spatial
 import spatialpandas as sp
 import cartopy.crs as ccrs
@@ -45,9 +46,24 @@ class poly_plot():
     def to_poly_mesh(self):
         '''Construct Polygon Mesh'''
         p_index = np.arange(0, 2*self.n_face_nodes)
+
+        # Vectorized Approach
         for n, i, j in zip(range(self.n_face_nodes), p_index[::2], p_index[1::2]):
             self.poly_array[:, i] = self.x[self.index[:, n]]
             self.poly_array[:, j] = self.y[self.index[:, n]]
+    
+        '''
+        # Dask Parallel Approach
+        poly_list_delayed = []    
+        for n in range(self.n_faces):
+            poly = delayed(self.create_poly)(n)
+            poly_list_delayed.append(poly)
+
+        poly_list = dask.compute(*poly_list_delayed)
+        self.poly_array = np.array(poly_list)
+        #'''
+
+
 
         # Create Polygon and Face Dataframe
         self.poly_array = self.poly_array.reshape((self.n_faces, 1, 8))
@@ -59,34 +75,107 @@ class poly_plot():
             self.df = sp.GeoDataFrame({'polygons': polygons,
                                        'faces': self.face_array.tolist()})
 
+    def create_poly(self, n):
+         # [1 x n_face_nodes]
+        poly_x = self.x[self.index[n]]
+        poly_y = self.y[self.index[n]]
+
+        # [1 x 2*n_face_nodes]
+        poly_entry = np.insert(poly_x, np.arange(len(poly(x)), poly_y))
+        return poly_entry
+
+
     def fix_cells(self):
-        '''Removes Edge Polygons'''
+        
         n_poly = self.df['polygons'].values.shape[0]
         poly_data = self.df['polygons'].values.buffer_values.reshape(n_poly, 8)
+        face_data = self.df['faces'].values
 
-        # Create mask for x coordinates of each polygon
-        n = 2*self.n_face_nodes
-        x_mask = [True if i % 2 == 0 else False for i in range(n)]
+        # Get x values
+        x = poly_data[:, ::2]
+        x_abs = np.abs(poly_data[:, ::2])
 
-        # Find polygons with x values that are not the same sign
-        out_positive = np.all(poly_data[:, x_mask] > -20, axis=1)
-        out_negative = np.all(poly_data[:, x_mask] < 20, axis=1)
-        out = np.logical_or(out_positive, out_negative)
+        # Find violater cells
+        out_left = np.all((-x - x_abs) == 0, axis=1)
+        out_right = np.all((x - x_abs) == 0, axis=1)
+        out = out_left | out_right
 
-        # Index for polygons to drop
-        index = np.arange(0, n_poly, 1)
-        index = index[np.invert(out)]
+        # Index of violater cells
+        drop_index = np.arange(0, n_poly, 1)
+        drop_index = drop_index[~out]
 
-        # Create a new df with dropped polygons
-        df = self.df.drop(index)
-        return df
+        # Get cells to fix
+        poly_to_fix = poly_data[drop_index]
+
+        # Exclude any center cells
+        corrected_index = np.any(np.abs(poly_to_fix[:, ::2]) < 100, axis=1)
+        poly_to_fix = poly_to_fix[~corrected_index]
+        drop_index = drop_index[~corrected_index]
+
+        poly_left_list = []
+        poly_right_list = []
+        face_list = []
+
+        # Split each violater cell into two cells
+        for i, poly in enumerate(poly_to_fix):
+            poly_left = poly.copy()
+            poly_right = poly.copy()
+             
+            # Start in RHS
+            if poly[0] > 0:        
+                x_remain_index = poly[2::2] > 0
+                poly_right[2::2][~x_remain_index] = poly[2::2][~x_remain_index] + 360 
+                
+                poly_left[0] = poly[0] - 360
+                poly_left[2::2][x_remain_index] = poly[2::2][x_remain_index] - 360
+
+                poly_left_list.append(poly_left)
+                poly_right_list.append(poly_right)
+                face_list.append(face_data[i])
+                continue
+            # Start in LHS
+            elif poly[0] < 0:
+                x_remain_index = poly[2::2] < 0
+                poly_left[2::2][~x_remain_index] = poly[2::2][~x_remain_index] - 360
+
+                poly_right[0] = poly[0] + 360
+                poly_right[2::2][x_remain_index] = poly[2::2][x_remain_index] + 360
+                
+                poly_left_list.append(poly_left)
+                poly_right_list.append(poly_right)
+                face_list.append(face_data[i])
+                continue
+            # Ignore
+            else:
+                continue
+
+        # Drop Violater Cells
+        df_droped = self.df.drop(drop_index)
+
+        
+        poly_insert = np.concatenate([poly_left_list, poly_right_list])
+        face_insert = np.concatenate([face_list, face_list])
+
+        poly_insert = poly_insert.reshape(2*len(poly_left_list), 1, 8)
+
+        polygons = sp.geometry.PolygonArray(poly_insert.tolist())
+
+        df_insert = sp.GeoDataFrame({'polygons': polygons,
+                                    'faces': face_insert.tolist()})
+        
+
+        # Join edge and adjusted dataframes
+        df_new = pd.concat([df_insert, df_droped], ignore_index=True)
+
+        self.df = df_new
+        return df_new
 
     def mesh(self):
         '''Return Polygon Mesh For Plotting with Datashader'''
         if self.df is None:
-            return;
-        df = self.fix_cells()
-        return df
+            return
+        #df = self.fix_cells()
+        return self.df
     
     def plot_data(self):
         '''not implemented'''
