@@ -9,9 +9,9 @@ import spatialpandas as sp
 import cartopy.crs as ccrs
 import cmocean
 
-import multiprocessing
+#import multiprocessing
 
-from pathos.multiprocessing import ProcessingPool as Pool
+#from pathos.multiprocessing import ProcessingPool as Pool
 
 import holoviews as hv
 from holoviews import opts
@@ -19,9 +19,9 @@ from holoviews.operation.datashader import rasterize
 import datashader as ds
 import geoviews.feature as gf
 
-from numba import njit, prange
+#from numba import njit, prange
 
-import time
+#import time
 
 
 
