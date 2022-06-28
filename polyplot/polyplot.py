@@ -138,7 +138,7 @@ class poly_plot():
         
     
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Original Approach ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # # Vectorized Approach 2 (~150ms)
+        # Vectorized Approach 2 (~150ms)
         # x_coords = self.x[self.index]
         # y_coords = self.y[self.index]
         # self.poly_array[:, 0::2] = x_coords
@@ -152,48 +152,48 @@ class poly_plot():
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyGeos Approach ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # x_coords = self.x[self.index]
-        # y_coords = self.y[self.index]
-        # self.polygon_array[:, :, 0] = x_coords
-        # self.polygon_array[:, :, 1] = y_coords
-
-        # geo = pg.polygons(self.polygon_array)
-
-        # arr_flat, part_indices = pg.get_parts(geo, return_index=True)
-        # offsets1 = np.insert(np.bincount(part_indices).cumsum(), 0, 0)
-        # arr_flat2, ring_indices = pg.geometry.get_rings(arr_flat, return_index=True)
-        # offsets2 = np.insert(np.bincount(ring_indices).cumsum(), 0, 0)
-        # coords, indices = pg.get_coordinates(arr_flat2, return_index=True)
-        # offsets3 = np.insert(np.bincount(indices).cumsum(), 0, 0)
-
-        # coords_flat = coords.ravel()
-        # offsets3 *= 2
-
-        # # create a pyarrow array from this
-        # _parr3 = pa.ListArray.from_arrays(pa.array(offsets3), pa.array(coords_flat))
-        # _parr2 = pa.ListArray.from_arrays(pa.array(offsets2), _parr3)
-        # parr = pa.ListArray.from_arrays(pa.array(offsets1), _parr2)
-
-        # polygons = sp.geometry.MultiPolygonArray(parr)
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        # Used for Original and PyGeos Approaches above
-         #self.df = sp.GeoDataFrame({'geometry': polygons})
-        
-        
-        
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyGeos + PGPD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         x_coords = self.x[self.index]
         y_coords = self.y[self.index]
         self.polygon_array[:, :, 0] = x_coords
         self.polygon_array[:, :, 1] = y_coords
 
-        polygons = pg.polygons(self.polygon_array)
+        geo = pg.polygons(self.polygon_array)
 
-        df = pd.DataFrame({"geometry": polygons, "faces" : np.zeros(self.n_faces)})
-        df = df.astype({'geometry':'geos'})
+        arr_flat, part_indices = pg.get_parts(geo, return_index=True)
+        offsets1 = np.insert(np.bincount(part_indices).cumsum(), 0, 0)
+        arr_flat2, ring_indices = pg.geometry.get_rings(arr_flat, return_index=True)
+        offsets2 = np.insert(np.bincount(ring_indices).cumsum(), 0, 0)
+        coords, indices = pg.get_coordinates(arr_flat2, return_index=True)
+        offsets3 = np.insert(np.bincount(indices).cumsum(), 0, 0)
 
-        self.df = df.geos.to_geopandas(geometry='geometry')
+        coords_flat = coords.ravel()
+        offsets3 *= 2
+
+        # create a pyarrow array from this
+        _parr3 = pa.ListArray.from_arrays(pa.array(offsets3), pa.array(coords_flat))
+        _parr2 = pa.ListArray.from_arrays(pa.array(offsets2), _parr3)
+        parr = pa.ListArray.from_arrays(pa.array(offsets1), _parr2)
+
+        polygons = sp.geometry.MultiPolygonArray(parr)
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # Used for Original and PyGeos Approaches above
+        self.df = sp.GeoDataFrame({'geometry': polygons})
+        
+        
+        
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyGeos + PGPD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # x_coords = self.x[self.index]
+        # y_coords = self.y[self.index]
+        # self.polygon_array[:, :, 0] = x_coords
+        # self.polygon_array[:, :, 1] = y_coords
+
+        # polygons = pg.polygons(self.polygon_array)
+
+        # df = pd.DataFrame({"geometry": polygons, "faces" : np.zeros(self.n_faces)})
+        # df = df.astype({'geometry':'geos'})
+
+        # self.df = df.geos.to_geopandas(geometry='geometry')
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
 
@@ -288,38 +288,36 @@ class poly_plot():
         poly_insert = poly_insert.reshape(len(poly_list), self.n_face_nodes, 2)
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # geo = pg.polygons(poly_insert)
+        geo = pg.polygons(poly_insert)
 
-        # arr_flat, part_indices = pg.get_parts(geo, return_index=True)
-        # offsets1 = np.insert(np.bincount(part_indices).cumsum(), 0, 0)
-        # arr_flat2, ring_indices = pg.geometry.get_rings(arr_flat, return_index=True)
-        # offsets2 = np.insert(np.bincount(ring_indices).cumsum(), 0, 0)
-        # coords, indices = pg.get_coordinates(arr_flat2, return_index=True)
-        # offsets3 = np.insert(np.bincount(indices).cumsum(), 0, 0)
+        arr_flat, part_indices = pg.get_parts(geo, return_index=True)
+        offsets1 = np.insert(np.bincount(part_indices).cumsum(), 0, 0)
+        arr_flat2, ring_indices = pg.geometry.get_rings(arr_flat, return_index=True)
+        offsets2 = np.insert(np.bincount(ring_indices).cumsum(), 0, 0)
+        coords, indices = pg.get_coordinates(arr_flat2, return_index=True)
+        offsets3 = np.insert(np.bincount(indices).cumsum(), 0, 0)
 
-        # coords_flat = coords.ravel()
-        # offsets3 *= 2
+        coords_flat = coords.ravel()
+        offsets3 *= 2
 
-        # # create a pyarrow array from this
-        # _parr3 = pa.ListArray.from_arrays(pa.array(offsets3), pa.array(coords_flat))
-        # _parr2 = pa.ListArray.from_arrays(pa.array(offsets2), _parr3)
-        # parr = pa.ListArray.from_arrays(pa.array(offsets1), _parr2)
+        # create a pyarrow array from this
+        _parr3 = pa.ListArray.from_arrays(pa.array(offsets3), pa.array(coords_flat))
+        _parr2 = pa.ListArray.from_arrays(pa.   array(offsets2), _parr3)
+        parr = pa.ListArray.from_arrays(pa.array(offsets1), _parr2)
 
-        # polygons = sp.geometry.MultiPolygonArray(parr)
+        polygons = sp.geometry.MultiPolygonArray(parr)
         
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Create new df with left and right cells
-        # df_insert = sp.GeoDataFrame({'geometry': polygons,
-        #                             'faces': face_list})
+        df_insert = sp.GeoDataFrame({'geometry': polygons,
+                                    'faces': face_list})
 
 
-        polygons = pg.polygons(poly_insert)
-        df_insert = pd.DataFrame({"geometry": polygons, "faces" : face_list})
-        df_insert = df_insert.astype({'geometry':'geos'})
-        df_insert = df_insert.geos.to_geopandas(geometry='geometry')
+        # polygons = pg.polygons(poly_insert)
+        # df_insert = pd.DataFrame({"geometry": polygons, "faces" : face_list})
+        # df_insert = df_insert.astype({'geometry':'geos'})
+        # df_insert = df_insert.geos.to_geopandas(geometry='geometry')
        
-        print(df_droped)
-        return self.df
 
         # Join existing and new df
         self.df_fixed = pd.concat([df_insert, df_droped], ignore_index=True)
