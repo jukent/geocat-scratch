@@ -9,6 +9,10 @@ import spatialpandas as sp
 import cartopy.crs as ccrs
 import cmocean
 
+import pygeos as pg
+import pgpd
+import pyarrow as pa
+
 #import multiprocessing
 
 #from pathos.multiprocessing import ProcessingPool as Pool
@@ -28,7 +32,7 @@ import geoviews.feature as gf
 
 
 class poly_plot():
-    def __init__(self, ds=None, ugrid_dict = None, x=None, y=None, face_nodes=None):
+    def __init__(self, ds=None):
         """ Constructs a Poly Plot Object based on UGRID data 
 
         Args:
@@ -46,37 +50,39 @@ class poly_plot():
             [n_faces x n_face_nodes]
 
         """
-        
-        # UGRID Data (coordinates and faces)
-        if ds is not None and ugrid_dict is not None:
-            self.x = ds[ugrid_dict['Mesh2_node_x']].values
-            self.y = ds[ugrid_dict['Mesh2_node_y']].values
-            self.face_nodes = ds[ugrid_dict['Mesh2_face_nodes']].values
-            self.n_faces, self.n_face_nodes = self.face_nodes.shape
-            self.n_mesh_nodes = self.x.shape[0]
-            self.index = self.face_nodes.astype(int)
-        else:
-            self.x, self.y = x, y
-            self.face_nodes = face_nodes
-            self.n_faces, self.n_face_nodes = face_nodes.shape
-            self.n_mesh_nodes = x.shape[0]
-            self.index = face_nodes.astype(int)
+
+        # Dictonary for Variables
+        var_dict = ds.ds_var_names
+        ugrid_dict = dict((k, v) for k,v in var_dict.items())
+
+            
+        self.ds = ds.ds
+        self.x = self.ds[ugrid_dict['Mesh2_node_x']].values
+        self.y = self.ds[ugrid_dict['Mesh2_node_y']].values
+        self.face_nodes = self.ds[ugrid_dict['Mesh2_face_nodes']].values
+        self.n_faces, self.n_face_nodes = self.face_nodes.shape
+        self.n_mesh_nodes = self.x.shape[0]
+        self.index = self.face_nodes.astype(int)
 
         # Polygon Mesh Data (polygons and faces)
         self.df = None
         self.df_fixed = None
         self.face_array = None
-        self.poly_array = np.zeros((self.n_faces, 2*self.n_face_nodes))
+        #self.poly_array = np.zeros((self.n_faces, 2*self.n_face_nodes))
+        self.polygon_array = np.zeros((self.n_faces, self.n_face_nodes, 2))
+
+        # Saved Index for Fixing Cells
+        self.drop_index = None
 
         
 
-    def set_data(self, data, method="Mean"):
+    def data_mesh(self, name, dims, method="Mean"):
         """ Calculates the face value of each reconstructred polygon
 
         Args:
         ----------
-        data : ndarray
-            Data Values used for calculated face fill value
+        name : string
+            Name of data variable for plotting
         method : string
             Method for calculating Fill Value
 
@@ -87,13 +93,23 @@ class poly_plot():
 
         """
 
-        if method == "Mean":
-            self.face_array = np.mean(data[self.index], axis=1)
+        if name not in list(self.ds.data_vars):
+            # add exception later
+            print("Invalid Data Variable")
+            return
+
         
+        if method == "Mean":
+            self.face_array = self.ds[name].isel(dims).values[self.index].mean(axis=1)
         else:
             self.face_array = None
 
-    def to_poly_mesh(self):
+        self.df['faces'] = self.face_array
+        self.fix_cells()
+    
+        return self.df_fixed
+
+    def construct_mesh(self):
         """ Constructs a Polygon Mesh suitable for rendering with Datashader
 
         Inputs:
@@ -120,38 +136,66 @@ class poly_plot():
             "faces" : Polygon Fill Values       
         """
         
-        
-        # Point Index
-        p_index = np.arange(0, 2*self.n_face_nodes)
+    
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Original Approach ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # # Vectorized Approach 2 (~150ms)
+        # x_coords = self.x[self.index]
+        # y_coords = self.y[self.index]
+        # self.poly_array[:, 0::2] = x_coords
+        # self.poly_array[:, 1::2] = y_coords
 
-        # Vectorized Approach 1 (~340ms)
-        # for n, i, j in zip(range(self.n_face_nodes), p_index[::2], p_index[1::2]):
-        #     self.poly_array[:, i] = self.x[self.index[:, n]]
-        #     self.poly_array[:, j] = self.y[self.index[:, n]]
+        # # Create Polygon and Face Dataframe
+        # self.poly_array = self.poly_array.reshape((self.n_faces, 1, 2*self.n_face_nodes))
+
+        # # Main Performance Bottleneck
+        # polygons = sp.geometry.PolygonArray(self.poly_array.tolist())
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyGeos Approach ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # x_coords = self.x[self.index]
+        # y_coords = self.y[self.index]
+        # self.polygon_array[:, :, 0] = x_coords
+        # self.polygon_array[:, :, 1] = y_coords
+
+        # geo = pg.polygons(self.polygon_array)
+
+        # arr_flat, part_indices = pg.get_parts(geo, return_index=True)
+        # offsets1 = np.insert(np.bincount(part_indices).cumsum(), 0, 0)
+        # arr_flat2, ring_indices = pg.geometry.get_rings(arr_flat, return_index=True)
+        # offsets2 = np.insert(np.bincount(ring_indices).cumsum(), 0, 0)
+        # coords, indices = pg.get_coordinates(arr_flat2, return_index=True)
+        # offsets3 = np.insert(np.bincount(indices).cumsum(), 0, 0)
+
+        # coords_flat = coords.ravel()
+        # offsets3 *= 2
+
+        # # create a pyarrow array from this
+        # _parr3 = pa.ListArray.from_arrays(pa.array(offsets3), pa.array(coords_flat))
+        # _parr2 = pa.ListArray.from_arrays(pa.array(offsets2), _parr3)
+        # parr = pa.ListArray.from_arrays(pa.array(offsets1), _parr2)
+
+        # polygons = sp.geometry.MultiPolygonArray(parr)
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # Used for Original and PyGeos Approaches above
+         #self.df = sp.GeoDataFrame({'geometry': polygons})
         
-        # Vectorized Approach 2 (~150ms)
+        
+        
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyGeos + PGPD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         x_coords = self.x[self.index]
         y_coords = self.y[self.index]
-        self.poly_array[:, 0::2] = x_coords
-        self.poly_array[:, 1::2] = y_coords
+        self.polygon_array[:, :, 0] = x_coords
+        self.polygon_array[:, :, 1] = y_coords
 
-        # Create Polygon and Face Dataframe
-        self.poly_array = self.poly_array.reshape((self.n_faces, 1, 2*self.n_face_nodes))
+        polygons = pg.polygons(self.polygon_array)
 
+        df = pd.DataFrame({"geometry": polygons, "faces" : np.zeros(self.n_faces)})
+        df = df.astype({'geometry':'geos'})
 
-        # ---------------------------------------------------------------------------
-        # Main Performance Bottleneck
-        polygons = sp.geometry.PolygonArray(self.poly_array.tolist())
-        # ---------------------------------------------------------------------------
-
-        if self.face_array is None:
-            self.df = sp.GeoDataFrame({'geometry': polygons})
-        else:
-            self.df = sp.GeoDataFrame({'geometry': polygons,
-                                       'faces': self.face_array.tolist()})
-
-        # Correct Edge Cells 
-        self.fix_cells()
+        self.df = df.geos.to_geopandas(geometry='geometry')
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
 
     def fix_cells(self):
         '''Fixes cells near the edges of the map (around +-180 lon)
@@ -166,8 +210,13 @@ class poly_plot():
         df_fixed: GeoDataFrame
             Dataframe containing fixed polygons based on edge value wrap around conditions
         '''
-        n_poly = self.df['geometry'].values.shape[0]
-        poly_data = self.df['geometry'].values.buffer_values.reshape(n_poly, 2*self.n_face_nodes)
+        #n_poly = self.df['geometry'].values.shape[0]
+        #print(self.df['geometry'].values.buffer_values.shape)
+        #poly_data = self.df['geometry'].values.buffer_values.reshape(self.n_faces, 2*self.n_face_nodes)
+        poly_data = np.zeros((self.n_faces, 2*self.n_face_nodes))
+        poly_data[:, 0::2] = self.polygon_array[:, :, 0]
+        poly_data[:, 1::2] = self.polygon_array[:, :, 1]
+        
         face_data = self.df['faces'].values
 
         # Positive and Negative Value to ignore sign changes in x values
@@ -182,8 +231,9 @@ class poly_plot():
         out_right = np.all((x - x_abs) == 0, axis=1)
         out = out_left | out_right
 
+
         # Index of violater cells
-        drop_index = np.arange(0, n_poly, 1)
+        drop_index = np.arange(0, self.n_faces, 1)
         drop_index = drop_index[~out]
 
         # Get cells to fix
@@ -235,13 +285,42 @@ class poly_plot():
 
         # Create polygon and face arrays to add to df
         poly_insert = np.array(poly_list)
-        poly_insert = poly_insert.reshape(len(poly_list), 1, 2*self.n_face_nodes)
+        poly_insert = poly_insert.reshape(len(poly_list), self.n_face_nodes, 2)
 
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # geo = pg.polygons(poly_insert)
+
+        # arr_flat, part_indices = pg.get_parts(geo, return_index=True)
+        # offsets1 = np.insert(np.bincount(part_indices).cumsum(), 0, 0)
+        # arr_flat2, ring_indices = pg.geometry.get_rings(arr_flat, return_index=True)
+        # offsets2 = np.insert(np.bincount(ring_indices).cumsum(), 0, 0)
+        # coords, indices = pg.get_coordinates(arr_flat2, return_index=True)
+        # offsets3 = np.insert(np.bincount(indices).cumsum(), 0, 0)
+
+        # coords_flat = coords.ravel()
+        # offsets3 *= 2
+
+        # # create a pyarrow array from this
+        # _parr3 = pa.ListArray.from_arrays(pa.array(offsets3), pa.array(coords_flat))
+        # _parr2 = pa.ListArray.from_arrays(pa.array(offsets2), _parr3)
+        # parr = pa.ListArray.from_arrays(pa.array(offsets1), _parr2)
+
+        # polygons = sp.geometry.MultiPolygonArray(parr)
+        
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Create new df with left and right cells
-        polygons = sp.geometry.PolygonArray(poly_insert.tolist())
-        df_insert = sp.GeoDataFrame({'geometry': polygons,
-                                    'faces': face_list})
-    
+        # df_insert = sp.GeoDataFrame({'geometry': polygons,
+        #                             'faces': face_list})
+
+
+        polygons = pg.polygons(poly_insert)
+        df_insert = pd.DataFrame({"geometry": polygons, "faces" : face_list})
+        df_insert = df_insert.astype({'geometry':'geos'})
+        df_insert = df_insert.geos.to_geopandas(geometry='geometry')
+       
+        print(df_droped)
+        return self.df
+
         # Join existing and new df
         self.df_fixed = pd.concat([df_insert, df_droped], ignore_index=True)
         
@@ -390,8 +469,9 @@ class poly_plot_dask():
         
         # Create Polygon and Face Dataframe
         self.poly_array = self.poly_array.reshape((self.n_faces, 1, 2*self.n_face_nodes))
-        print(self.poly_array)
-        polygons = sp.geometry.PolygonArray(self.poly_array.tolist())
+
+        #polygons = sp.geometry.PolygonArray(self.poly_array.tolist())
+        polygons = self.poly_array
 
         if self.face_array is None:
             self.df = sp.GeoDataFrame({'geometry': polygons})
