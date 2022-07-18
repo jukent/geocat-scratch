@@ -2,4 +2,4 @@
 
 -----------------
 
-# Python tool for constructing polygon meshes for visualizing unstructured grids
+# Python tool for visualizing unstructured grids as polygon meshes
