@@ -2,7 +2,7 @@
 
 -----------------
 
-# Python tool for visualizing unstructured grids as polygon meshes
+# Python tool for representing unstructrued grids as polygon meshes
 
 ## Unstructured Grids
 [short background about unstructrued grids and UXarray]
@@ -47,3 +47,6 @@ df.hvplot.polygons(rasterize=True,aggregator='mean', c='faces', cmap=cmap) * gf.
 * [PyGEOS](https://github.com/pygeos/pygeos)
 * [HoloViz](https://github.com/holoviz)
 * [Joris van den Bossche's Datashader Issue](https://github.com/holoviz/datashader/issues/1006)
+
+## Future
+* Shapely 2.0 Improvements
