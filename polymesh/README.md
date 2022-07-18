@@ -4,7 +4,13 @@
 
 # Python tool for visualizing unstructured grids as polygon meshes
 
-## Description
+## Unstructured Grids
+[short background about unstructrued grids and UXarray]
+
+<img src="https://github.com/NCAR/geocat-scratch/blob/main/polymesh/docs/data_ugrid_mesh.svg" data-canonical-src="https://github.com/NCAR/geocat-scratch/blob/main/polymesh/docs/data_ugrid_mesh.svg" width="700"/><br>
+
+## Cyclic Polygons on a Sphere
+When constructing a polygon mesh from data that exists on a sphere, there may be grid cells that lie on the boundary between positive and negative 180 longitude. These polygons would be rendered as thin, long strips due to their difference in longitude coordinates. To address this, PolyMesh locates these cyclic polygons, splits them up into two mirrors of the original (left and right), clips them, and masks the original. This allows for us to visualize the flat projection of our data, without any the artifacts present with the original mesh.
 
 ## Installation
 
