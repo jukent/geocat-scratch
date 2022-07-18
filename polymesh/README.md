@@ -6,8 +6,6 @@
 
 ## Description
 
-## Requirements
-
 ## Installation
 
 ## Usage
@@ -33,3 +31,10 @@ df = mesh.data_mesh(name="Example Var", dims={"time" : 0}, fill='faces')
 
 # Visualization
 df.hvplot.polygons(rasterize=True,aggregator='mean', c='faces', cmap=cmap) * gf.coastline(projection=projection) * gf.borders(projection=projection)
+```
+
+## References
+* [UXarray](https://github.com/UXARRAY/uxarray)
+* [PyGEOS](https://github.com/pygeos/pygeos)
+* [HoloViz](https://github.com/holoviz)
+* [Joris van den Bossche's Datashader Issue](https://github.com/holoviz/datashader/issues/1006)
