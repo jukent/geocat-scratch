@@ -1,5 +1,3 @@
------------------
-
 <img src="https://github.com/NCAR/geocat-scratch/blob/main/polymesh/docs/logo.png" data-canonical-src="https://github.com/NCAR/geocat-scratch/blob/main/polymesh/docs/logo.png" width="380"/><br>
 
 -----------------
@@ -32,3 +30,6 @@ df = mesh.data_mesh(name="Example Var", dims={"time" : 0}, fill='nodes')
 
 # GeoDataFrame for Visualization with Datashader (Values at Faces)
 df = mesh.data_mesh(name="Example Var", dims={"time" : 0}, fill='faces')
+
+# Visualization
+df.hvplot.polygons(rasterize=True,aggregator='mean', c='faces', cmap=cmap) * gf.coastline(projection=projection) * gf.borders(projection=projection)
