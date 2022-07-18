@@ -12,6 +12,9 @@
 ## Cyclic Polygons on a Sphere
 When constructing a polygon mesh from data that exists on a sphere, there may be grid cells that lie on the boundary between positive and negative 180 longitude. These polygons would be rendered as thin, long strips due to their difference in longitude coordinates. To address this, PolyMesh locates these cyclic polygons, splits them up into two mirrors of the original (left and right), clips them, and masks the original. This allows for us to visualize the flat projection of our data, without any the artifacts present with the original mesh.
 
+## PyGEOS, SpatialPandas, and HoloViz
+By using PyGEOS and SpatialPandas to handle the construction, constructing our mesh takes a fraction of the time that Delaunay Triangulation would require, while also yeilding a direct reconstruction of our original unstructured grid (other than fixing the cyclic polygons). By rasterizing our plots with HoloViz (hvPlot, Datashader), it allows for the rendering of millions of polygons in less than a few seconds.
+
 ## Installation
 
 ## Usage
