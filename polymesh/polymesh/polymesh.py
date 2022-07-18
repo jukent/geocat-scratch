@@ -14,16 +14,6 @@ import pgpd
 import pyarrow as pa
 
 
-import holoviews as hv
-from holoviews import opts
-from holoviews.operation.datashader import rasterize
-import datashader as ds
-import geoviews.feature as gf
-import yaml
-
-
-
-
 
 
 
@@ -31,7 +21,6 @@ class polymesh():
     def __init__(self, ds=None, projection=ccrs.PlateCarree()):
         """ Given a UXarray grid object, constructs a polygon
         mesh suitable for rendering with Datashader
-
         Parameters
         ----------
         ds : uxarray grid object, required
@@ -43,7 +32,6 @@ class polymesh():
         -------
         object : polymesh
             Class for creating renderable polygon meshes
-
         Examples
         --------
         Create a Poly Mesh object from a UXarray Dataset
@@ -65,7 +53,7 @@ class polymesh():
         # Face Node Index for Construction Polygons
         self.index = self.face_nodes.astype(int)
 
-        # Convert Points to Appropriate Projection
+        # Original x and y coordinates
         x = self.ds[ugrid_dict['Mesh2_node_x']].values
         y = self.ds[ugrid_dict['Mesh2_node_y']].values
 
@@ -80,18 +68,17 @@ class polymesh():
 
 
 
-    def data_mesh(self, name, dims, method="Mean"):
+    def data_mesh(self, name, dims, fill='nodes'):
         """ Given a Variable Name and Dimensions, returns a 
         GeoDataFrame containing geometry and fill values for 
         the polygon mesh
-
         Parameters
         ----------
         name : string, required
             Name of data variable for rendering
         dims : dict, required
             Dictonary of dimensions for data variable
-        method : string
+        fill : string
             Method for calculating face values
     
         Returns
@@ -106,8 +93,13 @@ class polymesh():
             print("Invalid Data Variable")
             return
     
-        # Computer Face Values for Polygons
-        if method == "Mean":
+        
+        # Data is given for every 'face'
+        if fill == 'faces':
+            face_array = self.ds[name].isel(dims).values
+        
+        # Data is given for every 'face node'
+        elif fill == 'nodes':
             face_array = np.zeros((self.polygon_array.shape[0]))
             # Face Values for Original Polygons
             face_array[:self.n_faces] = self.ds[name].isel(dims).values[self.index].mean(axis=1)
@@ -115,14 +107,16 @@ class polymesh():
             # Face Values for New (Left & Right) Polygons
             if self.new_poly_index is not None:
                 face_array[self.n_faces:] = face_array[self.new_poly_index]
+       
         else:
             self.face_array = None
 
         # Face Values Excluding Cyclic Cells 
         if self.new_poly_index is not None:
-            self.df['faces'] = np.delete(face_array, self.drop_index, axis=0)
+            updated_faces = np.delete(face_array, self.drop_index, axis=0)
+            self.df = self.df.assign(faces = updated_faces)
         else:
-            self.df['faces'] = face_array
+            self.df = self.df.assign(faces = face_array)
 
         return self.df
 
@@ -132,7 +126,6 @@ class polymesh():
     def construct_mesh(self):
         """ Constructs a Polygon Mesh using the calculated
         polygon array and drop index for cyclic polygons
-
         Parameters (from class)
         ----------
         polygon_array : ndarry
@@ -152,13 +145,13 @@ class polymesh():
         else:
             geo = pg.polygons(self.polygon_array)
 
+        # Get Coords and indicies for PyArrow
         arr_flat, part_indices = pg.get_parts(geo, return_index=True)
         offsets1 = np.insert(np.bincount(part_indices).cumsum(), 0, 0)
         arr_flat2, ring_indices = pg.geometry.get_rings(arr_flat, return_index=True)
         offsets2 = np.insert(np.bincount(ring_indices).cumsum(), 0, 0)
         coords, indices = pg.get_coordinates(arr_flat2, return_index=True)
         offsets3 = np.insert(np.bincount(indices).cumsum(), 0, 0)
-
         coords_flat = coords.ravel()
         offsets3 *= 2
 
@@ -192,7 +185,6 @@ class polymesh():
     def find_cyclic_polygons(self, x, y):
         """ Finds cyclic polygons (longitude edges) and returns
         their indicies
-
         Parameters (from class)
         ----------
         x : ndarry
@@ -238,7 +230,6 @@ class polymesh():
         """ Converts coordinate and face node data to
         a polygon array, taking into account cyclic
         polygons 
-
         Parameters (from class)
         ----------
         x : ndarry
@@ -325,8 +316,8 @@ class polymesh():
         x_orig, y_orig, _ = self.projection.transform_points(ccrs.PlateCarree(), 
                                                             poly_data[:, 0::2], 
                                                             poly_data[:, 1::2]).T
-        polygon_array[:self.n_faces, :, 0] = x_orig.T
-        polygon_array[:self.n_faces, :, 1] = y_orig.T
+        polygon_array[:self.n_faces, :, 0] = x_orig.T.astype(np.float32)
+        polygon_array[:self.n_faces, :, 1] = y_orig.T.astype(np.float32)
 
         # Set Coordinates for new (left & right) polygons
         x_new, y_new, _ = self.projection.transform_points(ccrs.PlateCarree(), 
@@ -345,6 +336,4 @@ class polymesh():
 
 
         
-
-
 
