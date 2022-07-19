@@ -10,7 +10,6 @@ import cartopy.crs as ccrs
 import cmocean
 
 import pygeos as pg
-import pgpd
 import pyarrow as pa
 
 
