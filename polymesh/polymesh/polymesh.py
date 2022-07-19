@@ -18,12 +18,12 @@ import pyarrow as pa
 
 
 class polymesh():
-    def __init__(self, ds=None, projection=ccrs.PlateCarree()):
+    def __init__(self, ugrid=None, projection=ccrs.PlateCarree()):
         """ Given a UXarray grid object, constructs a polygon
         mesh suitable for rendering with Datashader
         Parameters
         ----------
-        ds : uxarray grid object, required
+        ugrid : uxarray grid object, required
             Grid file name is the first argument.
         projection : ccrs., optional
             Cartopy projection for coordinate transform
@@ -40,13 +40,13 @@ class polymesh():
         """
 
         # Dictonary for Variables
-        var_dict = ds.ds_var_names
+        var_dict = ugrid.ds_var_names
         ugrid_dict = dict((k, v) for k,v in var_dict.items())
 
         # Projection for Coordinate Transform
         self.projection = projection
         
-        self.ds = ds.ds
+        self.ds = ugrid.ds
         self.face_nodes = self.ds[ugrid_dict['Mesh2_face_nodes']].values
         self.n_faces, self.n_face_nodes = self.face_nodes.shape
 
