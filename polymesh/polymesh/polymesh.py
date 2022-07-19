@@ -16,7 +16,7 @@ import pyarrow as pa
 
 
 
-class polymesh():
+class Polymesh:
     def __init__(self, ugrid=None, projection=ccrs.PlateCarree()):
         """ Given a UXarray grid object, constructs a polygon
         mesh suitable for rendering with Datashader
@@ -29,13 +29,13 @@ class polymesh():
     
         Returns
         -------
-        object : polymesh
+        object : Polymesh
             Class for creating renderable polygon meshes
         Examples
         --------
         Create a Poly Mesh object from a UXarray Dataset
         >>> grid_ds = ux.open_dataset(grid_filename)
-        >>> mesh = polymesh(grid_ds)
+        >>> mesh = Polymesh(grid_ds)
         """
 
         # Dictonary for Variables
