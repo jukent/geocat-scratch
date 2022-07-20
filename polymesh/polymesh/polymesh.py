@@ -22,13 +22,13 @@ class Polymesh():
 
         Returns
         -------
-        object : polymesh
+        object : Polymesh
             Class for creating renderable polygon meshes
         Examples
         --------
         Create a Poly Mesh object from a UXarray Dataset
         >>> grid_ds = ux.open_dataset(grid_filename)
-        >>> mesh = polymesh(grid_ds)
+        >>> mesh = Polymesh(grid_ds)
         """
 
         # Dictonary for Variables (remove on next UXarray Release)
