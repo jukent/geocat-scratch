@@ -54,9 +54,6 @@ class Polymesh():
         # Create Polygon Array with Fixed Polygons
         self.polygon_array, self.new_poly_index = self.create_polygon_array(x, y)
 
-        # Polygon Mesh Dataframe
-        self.gdf = self.construct_mesh()
-
 
 
     def data_mesh(self, name, dims, fill='nodes'):
@@ -170,8 +167,6 @@ class Polymesh():
 
         # self.df = df.geos.to_geopandas(geometry='geometry')
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        return self.gdf
-
 
     def find_cyclic_polygons(self, x, y):
         """ Finds cyclic polygons (longitude edges) and returns
