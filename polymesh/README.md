@@ -21,17 +21,17 @@ By using PyGEOS and SpatialPandas to handle mesh construction, it a fraction of 
 ## Usage
 
 ```python
-from polymesh import polymesh
-import uxarray
+from polymesh import Polymesh
+import uxarray as uxr
 grid_path = $GRID_PATH
 data_path = $DATA_PATH
 
 # Load Grid and Data files with UXarray
-ds_grid = ux.open_dataset(grid_path, data_path)
+ds_grid = uxr.open_dataset(grid_path, data_path)
 
 # Construct Polygon Mesh
 projection = ccrs.PlateCarree()
-mesh = polymesh(ds=ds_grid, projection=projection)
+mesh = Polymesh(ds=ds_grid, projection=projection).construct_mesh()
 
 # GeoDataFrame for Visualization with Datashader (Values at Edge Nodes)
 df = mesh.data_mesh(name="Example Var", dims={"time" : 0}, fill='nodes')
