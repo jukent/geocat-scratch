@@ -31,7 +31,8 @@ ds_grid = uxr.open_dataset(grid_path, data_path)
 
 # Construct Polygon Mesh
 projection = ccrs.PlateCarree()
-mesh = Polymesh(ds=ds_grid, projection=projection).construct_mesh()
+mesh = Polymesh(ds=ds_grid, projection=projection)
+mesh.construct_mesh()
 
 # GeoDataFrame for Visualization with Datashader (Values at Edge Nodes)
 df = mesh.data_mesh(name="Example Var", dims={"time" : 0}, fill='nodes')
