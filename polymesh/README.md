@@ -26,7 +26,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path + "/polymesh")
 
-from polymesh import Polymesh as Polymesh
+from polymesh import Polymesh
 ```
 
 If you are working on your own project, you can simply copy the `polymesh.py` file into your project and import it from there. 
