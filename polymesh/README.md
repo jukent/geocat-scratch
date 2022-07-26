@@ -16,7 +16,20 @@ When constructing a polygon mesh from data that exists on a sphere, there may ex
 By using PyGEOS and SpatialPandas to handle mesh construction, it a fraction of the time that Delaunay Triangulation would require (~4x Faster), while also yeilding a direct reconstruction of our original unstructured grid (other than fixing the cyclic polygons). By rasterizing our plots with HoloViz (hvPlot, Datashader), it allows for the rendering of millions of polygons in less than a few seconds.
 
 ## Installation
-[to-do]
+When working directly within the /notebooks/ directory, we can use the code below to import the tool 
+```Python
+# Relative Path for PolyMesh
+%load_ext autoreload
+%autoreload 2
+
+module_path = os.path.abspath(os.path.join('..'))
+if module_path not in sys.path:
+    sys.path.append(module_path + "/polymesh")
+
+from polymesh import Polymesh as Polymesh
+```
+
+If you are working on your own project, you can simply copy the `polymesh.py` file into your project and import it from there. 
 
 ## Usage
 
