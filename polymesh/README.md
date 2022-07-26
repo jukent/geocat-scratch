@@ -5,7 +5,6 @@
 # Python tool for representing unstructrued grids as polygon meshes
 
 ## Unstructured Grids
-[short background about unstructrued grids and UXarray]
 
 <img src="https://github.com/NCAR/geocat-scratch/blob/main/polymesh/docs/data_ugrid_mesh.svg" data-canonical-src="https://github.com/NCAR/geocat-scratch/blob/main/polymesh/docs/data_ugrid_mesh.svg" width="700"/><br>
 
