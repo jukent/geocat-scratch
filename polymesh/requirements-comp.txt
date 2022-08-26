@@ -1,0 +1,4 @@
+spatialpandas	
+uxarray			
+cartopy
+pygeos
