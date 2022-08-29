@@ -65,5 +65,6 @@ df.hvplot.polygons(rasterize=True,aggregator='mean', c='faces', cmap=cmap) * gf.
 
 ## Future
 * Shapely 2.0 Improvements
+* Integration with UXarray or GeoCAT-viz
 
 
