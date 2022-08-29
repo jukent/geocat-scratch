@@ -1,4 +1,6 @@
-spatialpandas	
-uxarray			
+spatialpandas
+uxarray
 cartopy
 pygeos
+netcdf4
+h5netcdf
