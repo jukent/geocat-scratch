@@ -1,0 +1,9 @@
+spatialpandas
+uxarray
+cartopy
+pygeos
+netcdf4
+h5netcdf
+holoviews
+geoviews
+hvplot
