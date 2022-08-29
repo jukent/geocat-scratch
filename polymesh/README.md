@@ -2,38 +2,33 @@
 
 -----------------
 
-# Python tool for representing unstructrued grids as polygon meshes
+# Python tool for representing unstructured data as polygon meshes for visualization 
 
-PolyMesh aims to provide a convienent tool to represent and visualize unstructured meshes in Python
+PolyMesh utilities UXarray and PyGEOS for loading and representing unstructured data as 2D polygon meshes for rendering with Datashader. Functionality is focussed around supporting typical atmospheric science workflows (handling data on a sphere, support for geographic projections, etc), however suggestions for features from other domains are welcome. 
 
-## Unstructured Data
+## Dependencies
 
-
-## Cyclic Polygons on a Sphere
-When constructing a polygon mesh from data that exists on a sphere, there may exist grid cells that lie on the boundary between positive and negative 180 longitude. These polygons would be rendered as thin, long strips due to their difference in longitude coordinates. To address this, PolyMesh locates these cyclic polygons, splits them up into two mirrors of the original (left and right), clips them, and masks the original. This allows for us to visualize the flat projection of our data, without any the artifacts present with the original mesh.
-
-## PyGEOS, SpatialPandas, and HoloViz
-By using PyGEOS and SpatialPandas to handle mesh construction, it a fraction of the time that Delaunay Triangulation would require (~4x Faster), while also yeilding a direct reconstruction of our original unstructured grid (other than fixing the cyclic polygons). By rasterizing our plots with HoloViz (hvPlot, Datashader), it allows for the rendering of millions of polygons in less than a few seconds.
-
-## Installation
-### Conda Enviroment
+### Conda Environment
 `conda install --name polymesh --file requirements.txt --channel conda-forge`
 
-### Usage 
-When working directly within the /notebooks/ directory, we can use the code below to import the tool 
-```Python
-# Relative Path for PolyMesh
-%load_ext autoreload
-%autoreload 2
+## Installation 
 
+PolyMesh exists as a class located within a single python file (polymesh/polymesh.py). Since it's not a package, there are various ways of importing and using the code.
+
+### Python File 
+One approach is to copy the polymesh.py file into your project and import the class from the relative path. For example, if you project is structured like this repository (project code in /notebooks/ and scripts in /polymesh/), you can add this when importing
+```Python
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path + "/polymesh")
 
 from polymesh import Polymesh
 ```
+### Notebooks
+When working with notebooks, you may find it easiest to simply copy the entire PolyMesh class into your notebook. When doing this, make sure to copy the imports too.
 
-If you are working on your own project, you can simply copy the `polymesh.py` file into your project and import it from there. 
+
+
 
 ## Usage
 
@@ -70,3 +65,5 @@ df.hvplot.polygons(rasterize=True,aggregator='mean', c='faces', cmap=cmap) * gf.
 
 ## Future
 * Shapely 2.0 Improvements
+
+
