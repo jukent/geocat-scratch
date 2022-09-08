@@ -53,7 +53,7 @@ df = mesh.data_mesh(name="Example Var", dims={"time" : 0}, fill='nodes')
 df = mesh.data_mesh(name="Example Var", dims={"time" : 0}, fill='faces')
 
 # Visualization
-df.hvplot.polygons(rasterize=True,aggregator='mean', c='faces', cmap=cmap) * gf.coastline(projection=projection) * gf.borders(projection=projection)
+df.hvplot.polygons(rasterize=True,aggregator='mean', c='faces', cmap=cmap)
 ```
 
 ## References
