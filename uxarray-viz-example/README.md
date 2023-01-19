@@ -9,6 +9,8 @@ Assumed is basic knowledge about structured and unstructured grids
 
 ### Overview
 
+Describe UGRID conventions and how UXarray uses them
+
 ### 2D Triangular Topologies
 
 ### 2D Flexible Topologies
