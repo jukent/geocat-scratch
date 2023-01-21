@@ -19,15 +19,22 @@ Describe UGRID conventions and how UXarray uses them
 
 
 
+
 ## Core Packages
 
-### UXarray
+### Geometry
+**Shapely:**
 
-### Matplotlib
+**Spatialpandas:**
 
-### HoloViz
+### Visualization
+**Matplotlib + Cartopy:**
 
-## Design
+**hvPlot + GeoViews:**
+
+
+
+
 
 ## References (fix/properly cite)
 
