@@ -7,6 +7,24 @@ from optparse import OptionParser
 from constants import *
 
 
+def scrip_from_mpas_xr(mpas_ds, useLandIceMask=False):
+    # Get info from input dataset
+    latCell = mpas_ds['latCell'].values
+    lonCell = mpas_ds['lonCell'].values
+    latVertex = mpas_ds['latVertex'].values
+    lonVertex = mpas_ds['lonVertex'].values
+    verticesOnCell = mpas_ds['verticesOnCell'].values - 1
+    nEdgesOnCell = mpas_ds['nEdgesOnCell'].values
+    nCells = len(mpas_ds['nCells'].values)
+    maxVertices = len(mpas_ds['maxEdges'].values)
+    areaCell = mpas_ds['areaCell'].values
+    
+    #sphereRadius = float(fin.sphere_radius)
+    #on_a_sphere = str(fin.on_a_sphere)
+
+    #areaCell = fin.variables['areaCell'][:]
+    
+
 
 def scrip_from_mpas(mpasFile, scripFile, useLandIceMask=False):
     """
