@@ -9,7 +9,7 @@ from constants import *
 
 
 def scrip_from_mpas_xr(mpas_ds, useLandIceMask=False):
-    # Get info from input dataset
+    # get mpas variables
     latCell = mpas_ds['latCell'].values
     lonCell = mpas_ds['lonCell'].values
     latVertex = mpas_ds['latVertex'].values
@@ -40,41 +40,36 @@ def scrip_from_mpas_xr(mpas_ds, useLandIceMask=False):
         if np.all((lonVertex > -np.pi)&(lonVertex < np.pi)):
             lonVertex = lonVertex + np.pi
             lonVertex = np.clip(lonVertex, 0.0, 2.0*np.pi)
-            
-    
-    
+
+    # grid centers
     grid_center_lat = latCell
     grid_center_lon = lonCell
 
-    #SCRIP uses square radians
+    # grid area in square radians
     grid_area = areaCell/(sphereRadius**2)
 
     # grid corners:
-    grid_corner_lon_local = np.zeros((nCells, maxVertices))
-    grid_corner_lat_local = np.zeros((nCells, maxVertices))
+    grid_corner_lon = np.zeros((nCells, maxVertices))
+    grid_corner_lat = np.zeros((nCells, maxVertices))
     cellIndices = np.arange(nCells)
     lastValidVertex = verticesOnCell[cellIndices, nEdgesOnCell-1]
+
     for iVertex in range(maxVertices):
         mask = iVertex < nEdgesOnCell
-        grid_corner_lat_local[mask, iVertex] = \
-            latVertex[verticesOnCell[mask, iVertex]]
-        grid_corner_lon_local[mask, iVertex] = \
-            lonVertex[verticesOnCell[mask, iVertex]]
+        grid_corner_lat[mask, iVertex] = latVertex[verticesOnCell[mask, iVertex]]
+        grid_corner_lon[mask, iVertex] = lonVertex[verticesOnCell[mask, iVertex]]
 
         mask = iVertex >= nEdgesOnCell
-        grid_corner_lat_local[mask, iVertex] = latVertex[lastValidVertex[mask]]
-        grid_corner_lon_local[mask, iVertex] = lonVertex[lastValidVertex[mask]]
+        grid_corner_lat[mask, iVertex] = latVertex[lastValidVertex[mask]]
+        grid_corner_lon[mask, iVertex] = lonVertex[lastValidVertex[mask]]
 
+    # set up land-ice mask
     if useLandIceMask:
-        # If useLandIceMask are enabled, mask out ocean under land ice.
         grid_imask = 1 - landIceMask[0, :]
     else:
-        # If landiceMasks are not enabled, don't mask anything out.
         grid_imask = np.ones(nCells)
 
-    grid_corner_lat = grid_corner_lat_local
-    grid_corner_lon = grid_corner_lon_local
-    
+    # create a scrip dataset
     ds = xr.Dataset()
 
     ds['grid_center_lat'] = xr.DataArray(data=grid_center_lat,
@@ -97,16 +92,11 @@ def scrip_from_mpas_xr(mpas_ds, useLandIceMask=False):
                                     dims=["grid_size"],
                                    )
     ds["grid_dims"] = xr.DataArray(data=[nCells], dims=["grid_rank"])
-    
 
     ds['grid_area'] = xr.DataArray(data=grid_area,
                                          dims=["grid_size"],
                                          attrs=dict(units="radian^2")
                                   )
-    
-    
-    
-      
     return ds
     
     
