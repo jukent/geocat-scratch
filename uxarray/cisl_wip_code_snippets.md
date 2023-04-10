@@ -57,3 +57,59 @@ dual_grid = ux.Grid(mpas_grid_ds, use_dual=True)
      unit:  "m"
     Mesh2_node_cart_z
      unit:  "m"
+```
+# Redesign Usage example
+
+```Python
+import uxarray as ux
+
+# grid and data file paths
+grid_path = "/path/to/grid.nc"
+data_path = "/path/to/data.nc"
+
+# uxarray dataset with grid accessor
+ux_ds = ux.open_dataset(grid_path, data_path)
+
+# acessing data variables (returns a ux.DataArray)
+psi = ux_ds['PSI']
+
+# accessing grid connectivity through the accessor
+face_nodes = ux_ds.uxgrid['Mesh2_face_nodes']
+face_nodes = ux_ds.uxgrid.Mesh2_face_nodes
+
+# other examples
+face_areas = ux_ds.uxgrid.compute_face_areas()
+integral = ux_ds['PSI'].uxgrid.integrate()
+
+```
+# non-redesign example
+
+```Python
+import xarray as xr
+import uxarray as ux
+
+# grid and data file paths
+grid_path = "/path/to/grid.nc"
+data_path = "/path/to/data.nc"
+
+# dataset with grid connectivity
+grid_ds = xr.open_dataset(grid_path)
+
+# dataset with data variables 
+data_ds = xr.open_dataset(data_path)
+
+# uxarray grid object constructed from xarray dataset
+grid = ux.Grid(grid_ds)
+
+# acessing data variables 
+psi = data_ds['PSI']
+
+# accessing grid connectivity variables
+face_nodes = grid.ds['Mesh2_face_nodes']
+face_nodes = grid.Mesh2_face_nodes
+
+# other examples
+face_areas = ux_ds.uxgrid.compute_face_areas()
+integral = ux_ds['PSI'].uxgrid.integrate()
+
+
