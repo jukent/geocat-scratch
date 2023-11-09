@@ -1,4 +1,64 @@
 ################################################################
+# Definition of generate_2d_array and helper functions from https://github.com/NCAR/pyngl/blob/develop/src/ngl/__init__.py
+
+#  Globals for random number generator for generat_2d_array
+
+dfran_iseq = 0
+dfran_rseq = [.749, .973, .666, .804, .081, .483, .919, .903,   \
+              .951, .960, .039, .269, .270, .756, .222, .478,   \
+              .621, .063, .550, .798, .027, .569, .149, .697,   \
+              .451, .738, .508, .041, .266, .249, .019, .191,   \
+              .266, .625, .492, .940, .508, .406, .972, .311,   \
+              .757, .378, .299, .536, .619, .844, .342, .295,   \
+              .447, .499, .688, .193, .225, .520, .954, .749,   \
+              .997, .693, .217, .273, .961, .948, .902, .104,   \
+              .495, .257, .524, .100, .492, .347, .981, .019,   \
+              .225, .806, .678, .710, .235, .600, .994, .758,   \
+              .682, .373, .009, .469, .203, .730, .588, .603,   \
+              .213, .495, .884, .032, .185, .127, .010, .180,   \
+              .689, .354, .372, .429                            \
+             ]
+
+#  Random number generator for generate_2d_array.
+
+
+def _dfran():
+    global dfran_iseq
+    global dfran_rseq
+    dfran_iseq = dfran_iseq % 100
+    r = dfran_rseq[dfran_iseq]
+    dfran_iseq = dfran_iseq + 1
+    return r
+
+def generate_2d_array(dims, num_low, num_high, minv, maxv, seed=0, \
+                      highs_at=None, lows_at=None):
+    """Generates smooth 2D arrays primarily for use in examples.
+    array = generate_2d_array(dims, num_low, num_high, minv, maxv, seed=0,
+                              highs_at=None, lows_at=None)
+    dims -- a list (or array) containing the dimensions of the
+            two-dimensional array to be returned.
+    num_low, num_high -- Integers representing the approximate minimum
+                         and maximum number of highs and lows that the
+                         output array will have. They must be in the
+                         range 1 to 25. If not, then they will be set to
+                         either 1 or 25.
+    minv, maxv -- The exact minimum and maximum values that the output array
+                  will have.
+    iseed -- an optional argument specifying a seed for the random number
+             generator.  If iseed is outside the range 0 to 99, it will
+             be set to 0.
+    lows_at -- an optional argument that is a list of coordinate
+               pairs specifying where the lows will occur.  If this
+               argument appears, then its length must equal num_low and
+               the coordinates must be in the ranges specified in dims.
+    highs_at -- an optional argument that is a list of coordinate
+                pairs specifying where the highs will occur.  If this
+                argument appears, then its length must equal num_high and
+                the coordinates must be in the ranges specified in dims.
+    """
+
+    #  Globals for random numbers.
+                          ################################################################
     #  Globals for random numbers.
 
     global dfran_iseq
